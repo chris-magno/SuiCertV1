@@ -95,10 +95,10 @@ export function useUserProfile() {
                 id: fields.id?.id || obj.data?.objectId || "",
                 owner: fields.owner || account.address,
                 displayName: fields.display_name || "Anonymous",
-                totalCerts: parseInt(fields.total_certs) || 0,
+                totalCerts: parseInt(fields.total_certificates) || 0,
                 trustRank: parseInt(fields.trust_rank) || 0,
-                reputation: parseInt(fields.reputation) || 0,
-                joinedAt: parseInt(fields.joined_at) || 0,
+                reputation: parseInt(fields.reputation_score) || 0,
+                joinedAt: parseInt(fields.created_at) || 0,
               } as UserProfile;
             }
           }

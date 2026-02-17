@@ -10,12 +10,99 @@ import { StatsSidebar } from "@/components/StatsSidebar";
 import { IssueCertificateForm } from "@/components/IssueCertificateForm";
 import { IssuedCertificatesTable } from "@/components/IssuedCertificatesTable";
 import { AchievementSystem } from "@/components/AchievementSystem";
+import { AdminBadge } from "@/components/AdminBadge";
+import { BadgeCard, Badge } from "@/components/BadgeCard";
 import { useCertificates, useUserProfile, useAdminCaps, useIssuedCertificates } from "@/hooks/useSuiData";
-import { Certificate, ViewMode } from "@/lib/types";
+import { Certificate, ViewMode, UserProfile } from "@/lib/types";
 import { Plus, Lightbulb, Shield, Crown, Award, FileCheck, User, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 type AdminViewMode = "my-certificates" | "issued-certificates";
+
+function getBadges(
+  isAdmin: boolean, 
+  certificates: Certificate[], 
+  profile: UserProfile | null
+): Badge[] {
+  const totalCertificates = certificates.length;
+  
+  // Sort certificates by issue date to find milestone dates
+  const sortedCerts = [...certificates].sort((a, b) => a.issuedAt - b.issuedAt);
+  
+  // Get earned dates for collector badges
+  const bronzeEarnedDate = sortedCerts[4]?.issuedAt; // 5th certificate
+  const silverEarnedDate = sortedCerts[9]?.issuedAt; // 10th certificate
+  const goldEarnedDate = sortedCerts[19]?.issuedAt; // 20th certificate
+  
+  // Use profile joinedAt for welcome and early adopter badges
+  const joinedAt = profile?.joinedAt || Date.now();
+  
+  const badges: Badge[] = [
+    // Default beginner badge - everyone gets this
+    {
+      id: "beginner",
+      name: "Welcome Badge",
+      description: "Your journey begins here",
+      icon: "star",
+      tier: "common",
+      earned: true,
+      earnedDate: joinedAt,
+    },
+    // Admin badge - earned when user has admin cap
+    {
+      id: "admin",
+      name: "Admin Badge",
+      description: "Certificate issuer authority",
+      icon: "crown",
+      tier: "legendary",
+      earned: isAdmin,
+      earnedDate: isAdmin ? joinedAt : undefined,
+      requirement: isAdmin ? undefined : "Obtain an AdminCap to unlock",
+    },
+    // Certificate collector badges
+    {
+      id: "collector-bronze",
+      name: "Bronze Collector",
+      description: "Earned 5 certificates",
+      icon: "award",
+      tier: "common",
+      earned: totalCertificates >= 5,
+      earnedDate: bronzeEarnedDate,
+      requirement: totalCertificates >= 5 ? undefined : `${totalCertificates}/5 certificates`,
+    },
+    {
+      id: "collector-silver",
+      name: "Silver Collector",
+      description: "Earned 10 certificates",
+      icon: "award",
+      tier: "rare",
+      earned: totalCertificates >= 10,
+      earnedDate: silverEarnedDate,
+      requirement: totalCertificates >= 10 ? undefined : `${totalCertificates}/10 certificates`,
+    },
+    {
+      id: "collector-gold",
+      name: "Gold Collector",
+      description: "Earned 20 certificates",
+      icon: "shield",
+      tier: "epic",
+      earned: totalCertificates >= 20,
+      earnedDate: goldEarnedDate,
+      requirement: totalCertificates >= 20 ? undefined : `${totalCertificates}/20 certificates`,
+    },
+    {
+      id: "early-adopter",
+      name: "Early Adopter",
+      description: "One of the first to join SuiCert",
+      icon: "sparkles",
+      tier: "epic",
+      earned: true,
+      earnedDate: joinedAt,
+    },
+  ];
+
+  return badges;
+}
 
 export default function Home() {
   const account = useCurrentAccount();
@@ -26,6 +113,7 @@ export default function Home() {
   const isAdmin = adminCaps.length > 0;
   
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
+  const badges = getBadges(isAdmin, certificates, profile);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [adminViewMode, setAdminViewMode] = useState<AdminViewMode>("my-certificates");
   const [showIssueForm, setShowIssueForm] = useState(false);
@@ -88,50 +176,11 @@ export default function Home() {
       
       <Header onToggleView={toggleViewMode} viewMode={viewMode} />
 
-      {/* Admin Banner */}
+      {/* Admin Badge - Earned for having AdminCap */}
       {isAdmin && (
         <div className="relative z-10 px-6 mt-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-gradient-to-r from-amber-900/40 via-orange-900/40 to-amber-900/40 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-6 shadow-lg shadow-amber-500/20 animate-fade-in">
-              <div className="flex items-start justify-between gap-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-amber-500/20 rounded-xl">
-                    <Crown className="w-8 h-8 text-amber-400" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-2xl font-bold text-white">Admin Access</h3>
-                      <span className="px-3 py-1 bg-amber-500/30 border border-amber-400/50 rounded-full text-xs font-semibold text-amber-300">
-                        VERIFIED
-                      </span>
-                    </div>
-                    <p className="text-amber-200/90 mb-3">
-                      You are authorized to issue certificates as{" "}
-                      <span className="font-semibold text-amber-300">
-                        {adminCaps[0].institutionName}
-                      </span>
-                    </p>
-                    <div className="flex items-center gap-6 text-sm text-amber-300/80">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        <span>Institution Address: {adminCaps[0].institutionAddress.slice(0, 10)}...</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Award className="w-4 h-4" />
-                        <span>Total Issued: {adminCaps[0].totalIssued}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleAddCertificate}
-                  className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl text-white font-bold transition-all duration-300 hover:scale-105 shadow-lg shadow-amber-500/30 flex items-center gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Issue Certificate
-                </button>
-              </div>
-            </div>
+          <div className="max-w-7xl mx-auto animate-fade-in">
+            <AdminBadge onIssueClick={handleAddCertificate} />
           </div>
         </div>
       )}
@@ -150,11 +199,10 @@ export default function Home() {
                       ? "bg-indigo-600 text-white shadow-lg"
                       : "text-indigo-300 hover:text-white"
                   }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span>My Certificates</span>
+                >  <Award className="w-5 h-5" />
+                  <span>Badge Collection</span>
                   <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
-                    {certificates.length}
+                    {badges.filter(b => b.earned).length}/{badges.length}
                   </span>
                 </button>
                 <button
@@ -198,11 +246,13 @@ export default function Home() {
                 <p className="text-indigo-300">
                   {adminViewMode === "issued-certificates" 
                     ? "Loading issued certificates..." 
-                    : "Loading your certificates..."}
+                    : isAdmin && adminViewMode === "my-certificates"
+                      ? "Loading your badges..."
+                      : "Loading your certificates..."}
                 </p>
               </div>
             </div>
-          ) : displayCertificates.length === 0 ? (
+          ) : displayCertificates.length === 0 && !(isAdmin && adminViewMode === "my-certificates") ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="text-center max-w-md">
                 <div className="text-6xl mb-4">
@@ -243,6 +293,19 @@ export default function Home() {
                 certificates={displayCertificates}
                 onViewCertificate={(cert) => setSelectedCertificate(cert)}
               />
+            ) : isAdmin && adminViewMode === "my-certificates" ? (
+              // Badge Collection view for admins
+              <div className="space-y-8">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-white mb-2">Your Badge Collection</h2>
+                  <p className="text-indigo-300">Showcase your achievements and milestones</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {badges.map((badge, index) => (
+                    <BadgeCard key={badge.id} badge={badge} index={index} />
+                  ))}
+                </div>
+              </div>
             ) : (
               // Card/Grid view for user's certificates
               <div

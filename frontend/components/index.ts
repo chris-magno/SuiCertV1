@@ -1,5 +1,7 @@
 export { AchievementSystem } from "./AchievementSystem";
+export { AdminBadge } from "./AdminBadge";
 export { BackgroundEffects } from "./BackgroundEffects";
+export { BadgeCard } from "./BadgeCard";
 export { CertificateCard } from "./CertificateCard";
 export { CertificateModal } from "./CertificateModal";
 export { Header } from "./Header";

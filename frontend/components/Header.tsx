@@ -1,9 +1,11 @@
 "use client";
 
 import { WalletConnect } from "./WalletConnect";
-import { Star, ShieldCheck } from "lucide-react";
+import { AdminBadge } from "./AdminBadge";
+import { Star, ShieldCheck, Crown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAdminCaps } from "@/hooks/useSuiData";
 
 interface HeaderProps {
   onToggleView?: () => void;
@@ -12,6 +14,8 @@ interface HeaderProps {
 
 export function Header({ onToggleView, viewMode }: HeaderProps) {
   const pathname = usePathname();
+  const { data: adminCaps = [] } = useAdminCaps();
+  const isAdmin = adminCaps.length > 0;
 
   return (
     <header className="relative z-10 p-6 pb-8">
@@ -33,16 +37,23 @@ export function Header({ onToggleView, viewMode }: HeaderProps) {
 
         <div className="flex gap-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
           {/* Navigation Links */}
-          <Link
-            href="/"
-            className={`px-6 py-3 backdrop-blur-xl border rounded-2xl font-semibold transition-all duration-300 hover:scale-105 ${
-              pathname === "/"
-                ? "bg-indigo-600/50 border-indigo-400/50 text-white"
-                : "bg-indigo-600/20 border-indigo-400/20 text-indigo-300 hover:bg-indigo-600/30"
-            }`}
-          >
-            My Certificates
-          </Link>
+          {isAdmin ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-600/20 border border-amber-400/30 rounded-2xl">
+              <Crown className="w-5 h-5 text-amber-400" />
+              <span className="text-amber-300 font-semibold text-sm">Admin Access</span>
+            </div>
+          ) : (
+            <Link
+              href="/"
+              className={`px-6 py-3 backdrop-blur-xl border rounded-2xl font-semibold transition-all duration-300 hover:scale-105 ${
+                pathname === "/"
+                  ? "bg-indigo-600/50 border-indigo-400/50 text-white"
+                  : "bg-indigo-600/20 border-indigo-400/20 text-indigo-300 hover:bg-indigo-600/30"
+              }`}
+            >
+              My Certificates
+            </Link>
+          )}
           
           <Link
             href="/verify"
