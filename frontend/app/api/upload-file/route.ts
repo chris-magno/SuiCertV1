@@ -13,6 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`Uploading file: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+
     // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
@@ -24,6 +26,8 @@ export async function POST(request: NextRequest) {
 
     // Upload to Pinata
     const cid = await uploadFileToPinata(file);
+    
+    console.log(`File uploaded successfully: CID=${cid}`);
 
     return NextResponse.json({
       success: true,
@@ -35,8 +39,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in upload-file API:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to upload file to IPFS";
     return NextResponse.json(
-      { error: "Failed to upload file to IPFS" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

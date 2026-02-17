@@ -25,8 +25,12 @@ export async function POST(request: NextRequest) {
       attributes: body.attributes || [],
     };
 
+    console.log("Uploading metadata:", JSON.stringify(metadata, null, 2));
+
     // Upload to Pinata
     const cid = await uploadMetadataToPinata(metadata);
+
+    console.log(`Metadata uploaded successfully: CID=${cid}`);
 
     return NextResponse.json({ 
       success: true, 
@@ -35,8 +39,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in upload-metadata API:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to upload metadata to IPFS";
     return NextResponse.json(
-      { error: "Failed to upload metadata to IPFS" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

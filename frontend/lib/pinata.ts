@@ -25,39 +25,76 @@ export interface CertificateMetadata {
 }
 
 /**
- * Upload certificate metadata to IPFS via Pinata
+ * Upload certificate metadata to IPFS via Pinata using REST API
  * This should be called from an API route, not client-side
  */
 export async function uploadMetadataToPinata(
   metadata: CertificateMetadata
 ): Promise<string> {
-  if (!pinataClient) {
-    throw new Error("Pinata client not initialized. Check PINATA_JWT environment variable.");
+  if (!process.env.PINATA_JWT) {
+    throw new Error("PINATA_JWT not configured");
   }
 
   try {
-    const result = await (pinataClient as any).upload.json(metadata);
-    return result.IpfsHash;
+    const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.PINATA_JWT}`,
+      },
+      body: JSON.stringify({
+        pinataContent: metadata,
+        pinataMetadata: {
+          name: `certificate-${metadata.name.replace(/\s+/g, '-').toLowerCase()}`,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Pinata API error:", errorText);
+      throw new Error(`Pinata metadata upload failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.IpfsHash;
   } catch (error) {
-    console.error("Error uploading to Pinata:", error);
+    console.error("Error uploading metadata to Pinata:", error);
     throw error;
   }
 }
 
 /**
- * Upload a file to IPFS via Pinata
+ * Upload a file to IPFS via Pinata using REST API
  * This should be called from an API route, not client-side
  */
 export async function uploadFileToPinata(
   file: File
 ): Promise<string> {
-  if (!pinataClient) {
-    throw new Error("Pinata client not initialized. Check PINATA_JWT environment variable.");
+  if (!process.env.PINATA_JWT) {
+    throw new Error("PINATA_JWT not configured");
   }
 
   try {
-    const result = await (pinataClient as any).upload.file(file);
-    return result.IpfsHash;
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.PINATA_JWT}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Pinata API error:", errorText);
+      throw new Error(`Pinata upload failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.IpfsHash;
   } catch (error) {
     console.error("Error uploading file to Pinata:", error);
     throw error;
