@@ -49,6 +49,11 @@ export function CertificateModal({ certificate, isOpen, onClose }: CertificateMo
     toast.success("Verification link copied to clipboard! Anyone can use this link to verify your certificate.");
   };
 
+  const handleCopyObjectId = () => {
+    navigator.clipboard.writeText(certificate.id);
+    toast.success("Object ID copied to clipboard!");
+  };
+
   const handleCopyRecipientAddress = () => {
     navigator.clipboard.writeText(certificate.owner);
     toast.success("Recipient address copied to clipboard!");
@@ -147,7 +152,7 @@ export function CertificateModal({ certificate, isOpen, onClose }: CertificateMo
         )}
 
         {/* Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
             onClick={handleViewIPFS}
             className="py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-bold flex items-center justify-center gap-2 hover:scale-102 transition-transform"
@@ -173,6 +178,15 @@ export function CertificateModal({ certificate, isOpen, onClose }: CertificateMo
             <ShieldCheck className="w-5 h-5" />
             <span className="hidden md:inline">Verify Link</span>
             <span className="md:hidden">Verify</span>
+          </button>
+
+          <button
+            onClick={handleCopyObjectId}
+            className="py-4 bg-amber-600/30 backdrop-blur-xl border border-amber-400/30 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 hover:bg-amber-600/50 transition-colors"
+          >
+            <Copy className="w-5 h-5" />
+            <span className="hidden md:inline">Copy ID</span>
+            <span className="md:hidden">Copy ID</span>
           </button>
         </div>
       </div>

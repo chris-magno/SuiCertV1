@@ -187,7 +187,9 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="relative z-10 p-6 mt-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1920px] mx-auto flex gap-6">
+          {/* Content Area */}
+          <div className="flex-1 min-w-0">
           {/* Admin View Toggle */}
           {isAdmin && (
             <div className="mb-8 flex justify-center items-center gap-4">
@@ -327,13 +329,19 @@ export default function Home() {
             )
           )}
         </div>
+        
+        {/* Stats Sidebar */}
+        <StatsSidebar 
+          profile={profile} 
+          totalCerts={certificates.length}
+          isAdmin={isAdmin}
+          totalIssued={adminCaps[0]?.totalIssued || 0}
+          institutionName={adminCaps[0]?.institutionName || ""}
+          badgesEarned={badges.filter(b => b.earned).length}
+          totalBadges={badges.length}
+        />
+      </div>
       </main>
-
-      {/* Stats Sidebar */}
-      <StatsSidebar 
-        profile={profile} 
-        totalCerts={adminViewMode === "issued-certificates" ? issuedCertificates.length : certificates.length} 
-      />
 
       {/* Certificate Detail Modal */}
       <CertificateModal

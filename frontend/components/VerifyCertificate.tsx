@@ -336,8 +336,16 @@ export function VerifyCertificate() {
           </button>
         </div>
         <p className="mt-3 text-sm text-indigo-300/60">
-          Paste the certificate object ID from the Sui blockchain to verify its authenticity.
+          The certificate ID is a Sui object ID starting with "0x" (e.g., 0x1234abcd...).
         </p>
+        <div className="mt-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+          <p className="text-sm text-indigo-300/80 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>
+              You can find the certificate ID in your certificate details or by checking the certificate on the Sui blockchain explorer.
+            </span>
+          </p>
+        </div>
       </div>
 
       {/* Verification Result */}

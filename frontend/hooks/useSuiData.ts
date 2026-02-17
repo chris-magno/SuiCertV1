@@ -35,7 +35,7 @@ export function useCertificates() {
             if (content?.fields) {
               const fields = content.fields;
               certificates.push({
-                id: fields.id?.id || obj.data?.objectId || "",
+                id: obj.data?.objectId || fields.id?.id || "",
                 owner: fields.owner || account.address,
                 issuer: fields.issuer || "",
                 issuerName: fields.issuer_name || "Unknown Institution",
@@ -92,7 +92,7 @@ export function useUserProfile() {
             if (content?.fields) {
               const fields = content.fields;
               return {
-                id: fields.id?.id || obj.data?.objectId || "",
+                id: obj.data?.objectId || fields.id?.id || "",
                 owner: fields.owner || account.address,
                 displayName: fields.display_name || "Anonymous",
                 totalCerts: parseInt(fields.total_certificates) || 0,
@@ -141,7 +141,7 @@ export function useAdminCaps() {
             const content = data.content as any;
             if (content?.fields) {
               adminCaps.push({
-                id: content.fields.id?.id || obj.data?.objectId || "",
+                id: obj.data?.objectId || content.fields.id?.id || "",
                 institutionName: content.fields.institution_name || "",
                 institutionAddress: content.fields.institution_address || "",
                 totalIssued: parseInt(content.fields.total_issued) || 0,
@@ -368,9 +368,28 @@ export function useVerifyCertificate(certificateId: string | null) {
       }
 
       try {
+        // Validate Sui Object ID format
+        const trimmedId = certificateId.trim();
+        
+        // Basic validation: should start with 0x and be a valid hex string
+        // Sui object IDs are typically 66 characters (0x + 64 hex chars) but can vary
+        if (!trimmedId.startsWith("0x")) {
+          return { isValid: false, error: "Invalid certificate ID format. Must start with '0x'" };
+        }
+        
+        if (trimmedId.length < 10) {
+          return { isValid: false, error: "Invalid certificate ID format. ID too short" };
+        }
+
+        // Check if it's a valid hex string after 0x
+        const hexPart = trimmedId.slice(2);
+        if (!/^[0-9a-fA-F]+$/.test(hexPart)) {
+          return { isValid: false, error: "Invalid certificate ID format. Must contain only hexadecimal characters" };
+        }
+
         // Fetch the object from the blockchain
         const objectData = await client.getObject({
-          id: certificateId,
+          id: trimmedId,
           options: {
             showContent: true,
             showType: true,
@@ -398,7 +417,7 @@ export function useVerifyCertificate(certificateId: string | null) {
 
         const fields = content.fields;
         const certificate: Certificate = {
-          id: fields.id?.id || certificateId,
+          id: trimmedId, // Use the object ID that was used for verification
           owner: fields.owner || "",
           issuer: fields.issuer || "",
           issuerName: fields.issuer_name || "Unknown Institution",
@@ -425,6 +444,15 @@ export function useVerifyCertificate(certificateId: string | null) {
         };
       } catch (error: any) {
         console.error("Error verifying certificate:", error);
+        
+        // Handle specific error types
+        if (error.message?.includes("Invalid Sui Object id") || error.message?.includes("invalid object id")) {
+          return {
+            isValid: false,
+            error: "Invalid certificate ID format. Please check the ID and try again.",
+          };
+        }
+        
         return {
           isValid: false,
           error: error.message || "Failed to verify certificate",
