@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export function Header({ onToggleView, viewMode }: HeaderProps) {
   return (
-    <header className="relative z-10 p-6">
+    <header className="relative z-10 p-6 pb-8">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="animate-fade-in">
           <h1 className="text-5xl font-black tracking-tighter text-white mb-2">

@@ -3,7 +3,7 @@
 
 [move]
 version = 3
-manifest_digest = "C5B963E0E2F49E0DA32DB52398CD29997BD71C51373B3BB1D4606929FB785A33"
+manifest_digest = "9AC6A5DDD08FCDB6BFF89BC17D7EEA486F65676218F8E433579C36993737649F"
 deps_digest = "F8BBB0CCB2491CA29A3DF03D6F92277A4F3574266507ACD77214D37ECA3F3082"
 dependencies = [
   { id = "Sui", name = "Sui" },
@@ -43,11 +43,3 @@ source = { root = true }
 use_environment = "testnet"
 manifest_digest = "C2772B976EC6A56C32071C116C869B6B810C731713A3E79642606E99AE1F55DA"
 deps = { Sui = "Sui" }
-
-[env]
-
-[env.testnet]
-chain-id = "4c78adac"
-original-published-id = "0x3289b8cbc59ccd657166e0b71565941fa3456d93f4d318b1a0a1ff7cd5928542"
-latest-published-id = "0x3289b8cbc59ccd657166e0b71565941fa3456d93f4d318b1a0a1ff7cd5928542"
-published-version = "1"

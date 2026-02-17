@@ -248,6 +248,25 @@ module suicert::certificate {
         admin_cap
     }
 
+    /// Entry wrapper to issue AdminCap and transfer to sender
+    /// Use this function from the CLI to get your own AdminCap
+    entry fun issue_my_admin_cap(
+        registry: &mut PlatformRegistry,
+        institution_name: vector<u8>,
+        authorized_types: vector<u8>,
+        ctx: &mut TxContext
+    ) {
+        let sender = tx_context::sender(ctx);
+        let admin_cap = issue_admin_cap(
+            registry,
+            institution_name,
+            sender,  // institution_address = sender
+            authorized_types,
+            ctx
+        );
+        transfer::public_transfer(admin_cap, sender);
+    }
+
     // ===== User Profile Functions =====
 
     /// Create a user profile

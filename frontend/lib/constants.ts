@@ -1,6 +1,6 @@
 // Contract Configuration
-export const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "0x0"; // Update after deployment
-export const PLATFORM_REGISTRY_ID = process.env.NEXT_PUBLIC_PLATFORM_REGISTRY_ID || "0x0";
+export const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID || "";
+export const PLATFORM_REGISTRY_ID = process.env.NEXT_PUBLIC_PLATFORM_REGISTRY_ID || "";
 
 // Certificate Types
 export const CERT_TYPES = {

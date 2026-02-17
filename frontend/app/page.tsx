@@ -7,23 +7,25 @@ import { Header } from "@/components/Header";
 import { CertificateCard } from "@/components/CertificateCard";
 import { CertificateModal } from "@/components/CertificateModal";
 import { StatsSidebar } from "@/components/StatsSidebar";
-import { useCertificates, useUserProfile } from "@/hooks/useSuiData";
+import { IssueCertificateForm } from "@/components/IssueCertificateForm";
+import { useCertificates, useUserProfile, useAdminCaps } from "@/hooks/useSuiData";
 import { Certificate, ViewMode } from "@/lib/types";
-import { Plus, Lightbulb } from "lucide-react";
+import { Plus, Lightbulb, Shield, Crown, Award } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Home() {
   const account = useCurrentAccount();
   const { data: certificates = [], isLoading: certsLoading } = useCertificates();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { data: adminCaps = [] } = useAdminCaps();
+  const isAdmin = adminCaps.length > 0;
   
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [showIssueForm, setShowIssueForm] = useState(false);
 
   const handleAddCertificate = () => {
-    toast.info("Add Certificate", {
-      description: "In production, this will open a form to mint a new certificate on Sui blockchain",
-    });
+    setShowIssueForm(true);
   };
 
   const toggleViewMode = () => {
@@ -62,6 +64,54 @@ export default function Home() {
       <BackgroundEffects />
       
       <Header onToggleView={toggleViewMode} viewMode={viewMode} />
+
+      {/* Admin Banner */}
+      {isAdmin && (
+        <div className="relative z-10 px-6 mt-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-gradient-to-r from-amber-900/40 via-orange-900/40 to-amber-900/40 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-6 shadow-lg shadow-amber-500/20 animate-fade-in">
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-amber-500/20 rounded-xl">
+                    <Crown className="w-8 h-8 text-amber-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-2xl font-bold text-white">Admin Access</h3>
+                      <span className="px-3 py-1 bg-amber-500/30 border border-amber-400/50 rounded-full text-xs font-semibold text-amber-300">
+                        VERIFIED
+                      </span>
+                    </div>
+                    <p className="text-amber-200/90 mb-3">
+                      You are authorized to issue certificates as{" "}
+                      <span className="font-semibold text-amber-300">
+                        {adminCaps[0].institutionName}
+                      </span>
+                    </p>
+                    <div className="flex items-center gap-6 text-sm text-amber-300/80">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        <span>Institution Address: {adminCaps[0].institutionAddress.slice(0, 10)}...</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Award className="w-4 h-4" />
+                        <span>Total Issued: {adminCaps[0].totalIssued}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={handleAddCertificate}
+                  className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl text-white font-bold transition-all duration-300 hover:scale-105 shadow-lg shadow-amber-500/30 flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Issue Certificate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="relative z-10 p-6 mt-8">
@@ -118,6 +168,12 @@ export default function Home() {
         certificate={selectedCertificate}
         isOpen={!!selectedCertificate}
         onClose={() => setSelectedCertificate(null)}
+      />
+
+      {/* Issue Certificate Form */}
+      <IssueCertificateForm
+        isOpen={showIssueForm}
+        onClose={() => setShowIssueForm(false)}
       />
 
       {/* Floating Action Button */}

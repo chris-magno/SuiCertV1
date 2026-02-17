@@ -3,6 +3,7 @@
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
 import { useQuery } from "@tanstack/react-query";
 import { Certificate, UserProfile } from "@/lib/types";
+import { PACKAGE_ID } from "@/lib/constants";
 
 export function useCertificates() {
   const account = useCurrentAccount();
@@ -28,28 +29,31 @@ export function useCertificates() {
         
         for (const obj of ownedObjects.data) {
           const data = obj.data;
-          if (data?.type && data.type.includes("::certificate::Certificate")) {
+          // Check if this is a Certificate object from our package
+          if (data?.type && data.type.includes("certificate::Certificate")) {
             const content = data.content as any;
             if (content?.fields) {
+              const fields = content.fields;
               certificates.push({
-                id: content.fields.id?.id || obj.data?.objectId || "",
-                owner: content.fields.owner || "",
-                issuer: content.fields.issuer || "",
-                issuerName: content.fields.issuer_name || "",
-                certType: parseInt(content.fields.cert_type) || 1,
-                title: content.fields.title || "",
-                description: content.fields.description || "",
-                pinataCid: content.fields.pinata_cid || "",
-                ipfsUrl: content.fields.ipfs_url || "",
-                issuedAt: parseInt(content.fields.issued_at) || Date.now(),
-                expiresAt: parseInt(content.fields.expires_at) || 0,
-                trustRank: parseInt(content.fields.trust_rank) || 0,
-                bountyAmount: content.fields.bounty_amount ? parseInt(content.fields.bounty_amount) : undefined,
+                id: fields.id?.id || obj.data?.objectId || "",
+                owner: fields.owner || account.address,
+                issuer: fields.issuer || "",
+                issuerName: fields.issuer_name || "Unknown Institution",
+                certType: parseInt(fields.cert_type) || 1,
+                title: fields.title || "Untitled Certificate",
+                description: fields.description || "",
+                pinataCid: fields.pinata_cid || "",
+                ipfsUrl: fields.ipfs_url || "",
+                issuedAt: parseInt(fields.issued_at) || Date.now(),
+                expiresAt: parseInt(fields.expires_at) || 0,
+                trustRank: parseInt(fields.trust_rank) || 0,
+                bountyAmount: fields.bounty_amount ? parseInt(fields.bounty_amount) : undefined,
               });
             }
           }
         }
 
+        console.log(`Found ${certificates.length} certificates for ${account.address}`);
         return certificates;
       } catch (error) {
         console.error("Error fetching certificates:", error);
@@ -83,17 +87,18 @@ export function useUserProfile() {
         // Find UserProfile object
         for (const obj of ownedObjects.data) {
           const data = obj.data;
-          if (data?.type && data.type.includes("::certificate::UserProfile")) {
+          if (data?.type && data.type.includes("certificate::UserProfile")) {
             const content = data.content as any;
             if (content?.fields) {
+              const fields = content.fields;
               return {
-                id: content.fields.id?.id || obj.data?.objectId || "",
-                owner: content.fields.owner || "",
-                displayName: content.fields.display_name || "",
-                totalCerts: parseInt(content.fields.total_certs) || 0,
-                trustRank: parseInt(content.fields.trust_rank) || 0,
-                reputation: parseInt(content.fields.reputation) || 0,
-                joinedAt: parseInt(content.fields.joined_at) || Date.now(),
+                id: fields.id?.id || obj.data?.objectId || "",
+                owner: fields.owner || account.address,
+                displayName: fields.display_name || "Anonymous",
+                totalCerts: parseInt(fields.total_certs) || 0,
+                trustRank: parseInt(fields.trust_rank) || 0,
+                reputation: parseInt(fields.reputation) || 0,
+                joinedAt: parseInt(fields.joined_at) || Date.now(),
               } as UserProfile;
             }
           }
@@ -103,6 +108,53 @@ export function useUserProfile() {
       } catch (error) {
         console.error("Error fetching user profile:", error);
         return null;
+      }
+    },
+    enabled: !!account?.address,
+    refetchInterval: 10000,
+  });
+}
+
+export function useAdminCaps() {
+  const account = useCurrentAccount();
+  const client = useSuiClient();
+
+  return useQuery({
+    queryKey: ["adminCaps", account?.address],
+    queryFn: async () => {
+      if (!account?.address) return [];
+
+      try {
+        const ownedObjects = await client.getOwnedObjects({
+          owner: account.address,
+          options: {
+            showContent: true,
+            showType: true,
+          },
+        });
+
+        const adminCaps: any[] = [];
+
+        for (const obj of ownedObjects.data) {
+          const data = obj.data;
+          if (data?.type && data.type.includes("certificate::AdminCap")) {
+            const content = data.content as any;
+            if (content?.fields) {
+              adminCaps.push({
+                id: content.fields.id?.id || obj.data?.objectId || "",
+                institutionName: content.fields.institution_name || "",
+                institutionAddress: content.fields.institution_address || "",
+                totalIssued: parseInt(content.fields.total_issued) || 0,
+                authorizedTypes: content.fields.authorized_types || [],
+              });
+            }
+          }
+        }
+
+        return adminCaps;
+      } catch (error) {
+        console.error("Error fetching admin caps:", error);
+        return [];
       }
     },
     enabled: !!account?.address,
