@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuiCert - The Internet of Verified Skills</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'sui-indigo': {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                            950: '#1e1b4b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes slideInFromBottom {
+            0% { transform: translateY(100%); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .animate-glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        .animate-slide-in {
+            animation: slideInFromBottom 0.5s ease-out;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .certificate-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .certificate-card:hover {
+            transform: scale(1.05) rotateY(5deg);
+            box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.5);
+        }
+        
+        .certificate-card.selected {
+            transform: scale(1.08);
+            box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.7);
+        }
+        
+        .shine-effect {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.8s ease-in-out;
+        }
+        
+        .certificate-card:hover .shine-effect {
+            left: 200%;
+        }
+        
+        .backdrop-blur-custom {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 min-h-screen overflow-x-hidden">
+    
+    <!-- Animated Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <!-- Gradient Orbs -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/30 rounded-full blur-3xl animate-glow"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-glow" style="animation-delay: 1s;"></div>
+        
+        <!-- Floating Particles -->
+        <div id="particles" class="absolute inset-0"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative z-10 p-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="animate-fade-in">
+                <h1 class="text-5xl font-black tracking-tighter text-white mb-2">
+                    SuiCert <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Vault</span>
+                </h1>
+                <p class="text-indigo-300 text-sm tracking-wide flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    The Internet of Verified Skills
+                </p>
+            </div>
+            
+            <div class="flex gap-4 animate-fade-in" style="animation-delay: 0.2s;">
+                <button onclick="toggleViewMode()" class="px-6 py-3 bg-indigo-600/30 hover:bg-indigo-600/50 backdrop-blur-xl border border-indigo-400/30 rounded-2xl text-white font-semibold transition-all duration-300 hover:scale-105">
+                    <span id="view-mode-text">📋 List View</span>
+                </button>
+                <button onclick="connectWallet()" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-bold transition-all duration-300 hover:scale-105 shadow-lg shadow-indigo-500/50">
+                    Connect Wallet
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="relative z-10 p-6 mt-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Certificate Grid -->
+            <div id="certificate-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Certificates will be dynamically added here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Stats Sidebar -->
+    <div class="fixed top-24 right-6 z-10 animate-fade-in" style="animation-delay: 0.4s;">
+        <div class="bg-slate-900/80 backdrop-blur-custom border border-indigo-500/30 rounded-3xl p-6 shadow-2xl w-72">
+            <h3 class="text-white text-xl font-bold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                </svg>
+                Your Stats
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-indigo-300">Total Certificates</span>
+                        <span class="text-white font-bold" id="total-certs">5</span>
+                    </div>
+                    <div class="h-2 bg-indigo-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-3/4 animate-glow"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-indigo-300">Trust Rank</span>
+                        <span class="text-white font-bold">Master</span>
+                    </div>
+                    <div class="h-2 bg-indigo-950 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-amber-500 to-indigo-500 w-full animate-glow"></div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-indigo-500/20">
+                    <div class="text-xs text-indigo-400 mb-2">Reputation Score</div>
+                    <div class="text-3xl font-black text-white">9,247</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificate Detail Modal -->
+    <div id="certificate-modal" class="fixed inset-0 z-50 hidden items-end justify-center p-6 modal-backdrop">
+        <div id="modal-content" class="w-full max-w-2xl bg-slate-900/95 backdrop-blur-custom border border-indigo-500/30 rounded-3xl p-8 shadow-2xl animate-slide-in">
+            <!-- Modal content will be dynamically added -->
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button onclick="addCertificate()" class="fixed bottom-6 right-6 z-20 w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full shadow-2xl shadow-indigo-500/50 flex items-center justify-center text-white text-3xl font-bold hover:scale-110 transition-transform duration-300 animate-float">
+        +
+    </button>
+
+    <!-- Instructions -->
+    <div class="fixed bottom-6 left-6 z-10 bg-slate-900/70 backdrop-blur-xl border border-indigo-500/20 rounded-2xl px-4 py-3 text-indigo-300 text-sm animate-fade-in" style="animation-delay: 0.6s;">
+        <span class="font-semibold">💡 Tip:</span> Click certificates to view details • Hover for preview
+    </div>
+
+    <script>
+        // Certificate Data
+        const certificates = [
+            {
+                id: '1',
+                title: 'Blockchain Fundamentals',
+                issuerName: 'Stanford University',
+                certType: 1,
+                trustRank: 4, // Master
+                pinataCid: 'QmXYZ123',
+                issuedAt: Date.now() - 86400000 * 30,
+            },
+            {
+                id: '2',
+                title: 'Move Programming Expert',
+                issuerName: 'Sui Foundation',
+                certType: 3,
+                trustRank: 3, // Expert
+                pinataCid: 'QmABC456',
+                issuedAt: Date.now() - 86400000 * 15,
+            },
+            {
+                id: '3',
+                title: 'Web3 Security Specialist',
+                issuerName: 'MIT',
+                certType: 1,
+                trustRank: 3,
+                pinataCid: 'QmDEF789',
+                issuedAt: Date.now() - 86400000 * 7,
+            },
+            {
+                id: '4',
+                title: 'Smart Contract Auditing',
+                issuerName: 'Consensys',
+                certType: 4,
+                trustRank: 2,
+                pinataCid: 'QmGHI012',
+                issuedAt: Date.now() - 86400000 * 3,
+            },
+            {
+                id: '5',
+                title: 'DeFi Protocol Developer',
+                issuerName: 'Chainlink',
+                certType: 3,
+                trustRank: 4,
+                pinataCid: 'QmJKL345',
+                issuedAt: Date.now() - 86400000,
+            },
+        ];
+
+        // Trust Rank Config
+        const rankColors = {
+            0: 'from-gray-400 to-gray-600',
+            1: 'from-blue-400 to-blue-600',
+            2: 'from-purple-400 to-purple-600',
+            3: 'from-amber-400 to-amber-600',
+            4: 'from-indigo-400 to-indigo-700',
+        };
+
+        const rankIcons = {
+            0: '🌱',
+            1: '⭐',
+            2: '💎',
+            3: '👑',
+            4: '🏆',
+        };
+
+        const rankNames = ['Novice', 'Intermediate', 'Advanced', 'Expert', 'Master'];
+        const certTypes = ['', 'Course', 'Degree', 'Skill', 'Achievement', 'Bootcamp'];
+
+        let selectedCertId = null;
+        let viewMode = 'grid'; // 'grid' or 'list'
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCertificates();
+            createParticles();
+        });
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'absolute w-2 h-2 bg-indigo-400/50 rounded-full animate-float';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                particle.style.animationDuration = (3 + Math.random() * 2) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Render certificates
+        function renderCertificates() {
+            const grid = document.getElementById('certificate-grid');
+            grid.innerHTML = '';
+            
+            certificates.forEach((cert, index) => {
+                const card = createCertificateCard(cert, index);
+                grid.appendChild(card);
+            });
+        }
+
+        // Create certificate card
+        function createCertificateCard(cert, index) {
+            const div = document.createElement('div');
+            div.className = `certificate-card relative w-full h-96 rounded-3xl p-8 bg-gradient-to-br ${rankColors[cert.trustRank]} shadow-2xl overflow-hidden cursor-pointer`;
+            div.style.animationDelay = (index * 0.1) + 's';
+            div.classList.add('animate-fade-in');
+            
+            div.onclick = () => showCertificateDetail(cert);
+            
+            div.innerHTML = `
+                <div class="shine-effect"></div>
+                
+                <!-- Holographic Effect -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-white/10"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10 h-full flex flex-col justify-between">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between">
+                        <svg class="w-12 h-12 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                        
+                        <!-- Trust Rank Badge -->
+                        <div class="flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
+                            <span class="text-2xl">${rankIcons[cert.trustRank]}</span>
+                            <span class="text-white font-bold text-sm">${rankNames[cert.trustRank]}</span>
+                        </div>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-black text-white leading-tight">
+                            ${cert.title}
+                        </h3>
+                        <p class="text-white/80 text-sm font-medium">
+                            ${cert.issuerName}
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex items-center justify-between">
+                        <div class="text-white/70 text-xs">
+                            Issued ${new Date(cert.issuedAt).toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decorative Elements -->
+                <div class="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-white/10"></div>
+                <div class="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-white/5"></div>
+            `;
+            
+            return div;
+        }
+
+        // Show certificate detail
+        function showCertificateDetail(cert) {
+            selectedCertId = cert.id;
+            const modal = document.getElementById('certificate-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <!-- Modal Header -->
+                <div class="flex items-start justify-between mb-6">
+                    <div class="flex-1">
+                        <h3 class="text-3xl font-black text-white mb-2">
+                            ${cert.title}
+                        </h3>
+                        <p class="text-indigo-300 text-lg font-medium">
+                            ${cert.issuerName}
+                        </p>
+                    </div>
+                    
+                    <button onclick="closeModal()" class="text-white/50 hover:text-white transition-colors p-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-indigo-950/50 rounded-2xl p-4 border border-indigo-500/20 hover:scale-105 transition-transform">
+                        <div class="text-indigo-400 text-xs font-semibold mb-1">Trust Rank</div>
+                        <div class="text-white text-2xl font-bold">${rankNames[cert.trustRank]}</div>
+                    </div>
+
+                    <div class="bg-purple-950/50 rounded-2xl p-4 border border-purple-500/20 hover:scale-105 transition-transform">
+                        <div class="text-purple-400 text-xs font-semibold mb-1">Type</div>
+                        <div class="text-white text-2xl font-bold">${certTypes[cert.certType]}</div>
+                    </div>
+
+                    <div class="bg-indigo-950/50 rounded-2xl p-4 border border-indigo-500/20 hover:scale-105 transition-transform">
+                        <div class="text-indigo-400 text-xs font-semibold mb-1">Issued</div>
+                        <div class="text-white text-lg font-bold">${new Date(cert.issuedAt).toLocaleDateString()}</div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <button onclick="viewOnIPFS('${cert.pinataCid}')" class="flex-1 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-bold flex items-center justify-center gap-2 hover:scale-102 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                        View on IPFS
+                    </button>
+                    
+                    <button onclick="shareCertificate('${cert.id}')" class="flex-1 py-4 bg-indigo-600/30 backdrop-blur-xl border border-indigo-400/30 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 hover:bg-indigo-600/50 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
+                        Share Certificate
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Close modal
+        function closeModal() {
+            const modal = document.getElementById('certificate-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            selectedCertId = null;
+        }
+
+        // Close modal when clicking backdrop
+        document.getElementById('certificate-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Toggle view mode
+        function toggleViewMode() {
+            viewMode = viewMode === 'grid' ? 'list' : 'grid';
+            const grid = document.getElementById('certificate-grid');
+            const button = document.getElementById('view-mode-text');
+            
+            if (viewMode === 'list') {
+                grid.className = 'grid grid-cols-1 max-w-2xl mx-auto gap-8';
+                button.textContent = '⊞ Grid View';
+            } else {
+                grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8';
+                button.textContent = '📋 List View';
+            }
+        }
+
+        // Connect wallet
+        function connectWallet() {
+            alert('🦊 Wallet connection feature\n\nIn production, this will:\n1. Connect to Sui Wallet\n2. Show your address\n3. Load your certificates from blockchain');
+        }
+
+        // Add certificate
+        function addCertificate() {
+            alert('➕ Add Certificate\n\nIn production, this will:\n1. Open a form\n2. Upload to IPFS\n3. Mint certificate on Sui blockchain');
+        }
+
+        // View on IPFS
+        function viewOnIPFS(cid) {
+            window.open(`https://gateway.pinata.cloud/ipfs/${cid}`, '_blank');
+        }
+
+        // Share certificate
+        function shareCertificate(id) {
+            alert('🔗 Share Certificate\n\nShare link copied to clipboard!\n\nIn production, this will generate a shareable link.');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
