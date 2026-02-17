@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSignAndExecuteTransaction, useCurrentAccount } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePinata } from "@/hooks/usePinata";
 import { useAdminCaps } from "@/hooks/useSuiData";
 import { PACKAGE_ID, PLATFORM_REGISTRY_ID, CERT_TYPES, TRUST_RANKS, CERT_TYPE_NAMES, RANK_NAMES } from "@/lib/constants";
@@ -16,6 +17,7 @@ interface IssueCertificateFormProps {
 
 export function IssueCertificateForm({ isOpen, onClose }: IssueCertificateFormProps) {
   const account = useCurrentAccount();
+  const queryClient = useQueryClient();
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const { uploadFile, uploadMetadata, uploading } = usePinata();
   const { data: adminCaps = [] } = useAdminCaps();
@@ -111,6 +113,25 @@ export function IssueCertificateForm({ isOpen, onClose }: IssueCertificateFormPr
           onSuccess: (result) => {
             console.log("Certificate minted successfully:", result);
             toast.success("Certificate issued successfully! 🎉");
+            toast.info("Refreshing data... This may take a few seconds.", { duration: 3000 });
+            
+            // Invalidate and refetch queries immediately
+            queryClient.invalidateQueries({ queryKey: ["adminCaps", account?.address] });
+            queryClient.invalidateQueries({ queryKey: ["issuedCertificates", account?.address] });
+            queryClient.invalidateQueries({ queryKey: ["certificates"] });
+            
+            // Force refetch after a short delay to allow blockchain to update
+            setTimeout(() => {
+              queryClient.refetchQueries({ queryKey: ["adminCaps", account?.address] });
+              queryClient.refetchQueries({ queryKey: ["issuedCertificates", account?.address] });
+            }, 2000);
+            
+            // Additional refetch after longer delay for blockchain indexing
+            setTimeout(() => {
+              queryClient.refetchQueries({ queryKey: ["issuedCertificates", account?.address] });
+              toast.success("Data refreshed! Check your issued certificates.", { duration: 2000 });
+            }, 5000);
+            
             onClose();
             // Reset form
             setFormData({

@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={spaceGrotesk.variable}>
-      <body className={spaceGrotesk.className}>
+      <body className={spaceGrotesk.className} suppressHydrationWarning>
         <Providers>
           {children}
           <Toaster position="top-right" richColors />
