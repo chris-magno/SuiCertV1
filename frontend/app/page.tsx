@@ -9,6 +9,7 @@ import { CertificateModal } from "@/components/CertificateModal";
 import { StatsSidebar } from "@/components/StatsSidebar";
 import { IssueCertificateForm } from "@/components/IssueCertificateForm";
 import { IssuedCertificatesTable } from "@/components/IssuedCertificatesTable";
+import { AchievementSystem } from "@/components/AchievementSystem";
 import { useCertificates, useUserProfile, useAdminCaps, useIssuedCertificates } from "@/hooks/useSuiData";
 import { Certificate, ViewMode } from "@/lib/types";
 import { Plus, Lightbulb, Shield, Crown, Award, FileCheck, User, RefreshCw } from "lucide-react";
@@ -180,6 +181,13 @@ export default function Home() {
               >
                 <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
+            </div>
+          )}
+
+          {/* Achievement System (Admin Only on Issued Certificates View) */}
+          {isAdmin && adminViewMode === "issued-certificates" && (
+            <div className="mb-8 animate-fade-in">
+              <AchievementSystem totalIssued={adminCaps[0]?.totalIssued || 0} />
             </div>
           )}
 

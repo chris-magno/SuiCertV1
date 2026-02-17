@@ -1,3 +1,4 @@
+export { AchievementSystem } from "./AchievementSystem";
 export { BackgroundEffects } from "./BackgroundEffects";
 export { CertificateCard } from "./CertificateCard";
 export { CertificateModal } from "./CertificateModal";
